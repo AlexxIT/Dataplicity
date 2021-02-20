@@ -1,0 +1,15 @@
+{
+  "domain": "dataplicity",
+  "name": "Dataplicity",
+  "version": "1.0.0",
+  "config_flow": true,
+  "documentation": "https://github.com/AlexxIT/Dataplicity",
+  "issue_tracker": "https://github.com/AlexxIT/Dataplicity/issues",
+  "dependencies": [
+  ],
+  "codeowners": [
+    "@AlexxIT"
+  ],
+  "requirements": [
+  ]
+}
