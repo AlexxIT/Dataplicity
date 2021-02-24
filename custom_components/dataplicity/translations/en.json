@@ -4,15 +4,17 @@
       "default": "Home Assistant added to the Dataplicity. Enable **Wormhole** in [Device settings]({device_url}) for public HTTPS access."
     },
     "abort": {
-      "win32": "Windows is not supported"
+      "win32": "Windows is not supported",
+      "ssl": "[SSL config](https://www.home-assistant.io/integrations/http/) is not supported"
     },
     "error": {
-      "auth": "Error during device registration"
+      "auth": "Error during device registration",
+      "token": "Wrong URL or Token"
     },
     "step": {
       "user": {
         "title": "Register Dataplicity Device",
-        "description": "Sign up to [Dataplicity](https://www.dataplicity.com/) and paste full install line or url or token:\n`https://www.dataplicity.com/XXXXXXXX.py`",
+        "description": "Sign up to [Dataplicity](https://www.dataplicity.com/) and paste full install line or URL or Token:\n`https://www.dataplicity.com/XXXXXXXX.py`",
         "data": {
           "token": "URL or Token"
         }
