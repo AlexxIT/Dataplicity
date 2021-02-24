@@ -1,0 +1,24 @@
+{
+  "config": {
+    "create_entry": {
+      "default": "Home Assistant добавлен в сервис Dataplicity. Включите **Wormhole** в [настройках устройства]({device_url}) для публичного HTTPS доступа."
+    },
+    "abort": {
+      "win32": "Windows не поддерживается",
+      "ssl": "[SSL конфигурация](https://www.home-assistant.io/integrations/http/) не поддерживается"
+    },
+    "error": {
+      "auth": "Ошибка в процессе регистрации устройства",
+      "token": "Неправильная ссылка или токен"
+    },
+    "step": {
+      "user": {
+        "title": "Регистрация устройства Dataplicity",
+        "description": "Зарегистрируйтесь в сервисе [Dataplicity](https://www.dataplicity.com/) и вставьте полную строку установки или ссылку или токен:\n`https://www.dataplicity.com/XXXXXXXX.py`",
+        "data": {
+          "token": "Ссылка или токен"
+        }
+      }
+    }
+  }
+}
