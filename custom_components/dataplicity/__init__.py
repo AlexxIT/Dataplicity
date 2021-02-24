@@ -35,8 +35,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     hass.data[DOMAIN] = client = Client(serial=entry.data['serial'],
                                         auth_token=entry.data['auth'])
-    # replace default 80 port to 8123
-    client.port_forward.add_service('web', 8123)
+    # replace default 80 port to Hass port (usual 8123)
+    client.port_forward.add_service('web', hass.config.api.port)
     Thread(name=DOMAIN, target=client.run_forever).start()
 
     return True
