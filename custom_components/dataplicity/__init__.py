@@ -1,6 +1,7 @@
 from threading import Thread
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.requirements import async_process_requirements
 from homeassistant.util import package
@@ -38,6 +39,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     # replace default 80 port to Hass port (usual 8123)
     client.port_forward.add_service('web', hass.config.api.port)
     Thread(name=DOMAIN, target=client.run_forever).start()
+
+    async def hass_stop(event):
+        client.exit()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, hass_stop)
 
     return True
 
