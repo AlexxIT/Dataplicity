@@ -19,7 +19,8 @@ async def async_setup(hass: HomeAssistant, hass_config: dict):
 
     try:
         package.install_package = fake_install
-        await async_process_requirements(hass, DOMAIN, [DOMAIN])
+        # latest dataplicity has bug with redirect_port
+        await async_process_requirements(hass, DOMAIN, ['dataplicity==0.4.40'])
         return True
     except:
         return False
