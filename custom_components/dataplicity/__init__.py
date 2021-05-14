@@ -11,6 +11,8 @@ DOMAIN = 'dataplicity'
 
 async def async_setup(hass: HomeAssistant, hass_config: dict):
     # fix problems with `enum34==1000000000.0.0` constraint in Hass
+    # https://github.com/home-assistant/core/commit/45f6f4443aa897a9c9c89cedbf3be6c7748cca94
+    # but it's not a problem in latest python versions
     real_install = package.install_package
 
     def fake_install(*args, **kwargs):
