@@ -1,8 +1,8 @@
-# Dataplicity integration for Home Assistant
+# Dataplicity for Home Assistant
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/custom-components/hacs)
-[![Donate](https://img.shields.io/badge/donate-Coffee-yellow.svg)](https://www.buymeacoffee.com/AlexxIT)
-[![Donate](https://img.shields.io/badge/donate-Yandex-red.svg)](https://money.yandex.ru/to/41001428278477)
+[![Donate](https://img.shields.io/badge/donate-BuyMeCoffee-yellow.svg)](https://www.buymeacoffee.com/AlexxIT)
+[![Donate](https://img.shields.io/badge/donate-YooMoney-8C3FFD.svg)](https://yoomoney.ru/to/41001428278477)
 
 Custom component for public HTTPS access to [Home Assistant](https://www.home-assistant.io/) with [Dataplicity](https://www.dataplicity.com/) service.
 
@@ -20,14 +20,16 @@ If you have an extra $5 per month - it's better to use [Nabu Casa](https://www.n
 
 <img src="screen.png" width="1280">
 
-## Install
+## Installation
 
-You can install component with [HACS](https://hacs.xyz/) custom repo: HACS > Integrations > 3 dots (upper top corner) > Custom repositories > URL: `AlexxIT/Dataplicity`, Category: Integration
+**Method 1.** [HACS](https://hacs.xyz/) custom repo:
 
-Or manually copy `dataplicity` folder from [latest release](https://github.com/AlexxIT/Dataplicity/releases/latest) to `custom_components` folder in your config folder.
+> HACS > Integrations > 3 dots (upper top corner) > Custom repositories > URL: `AlexxIT/Dataplicity`, Category: Integration > Add > wait > Dataplicity > Install
 
-# Config
+**Method 2.** Manually copy `dataplicity` folder from [latest release](https://github.com/AlexxIT/Dataplicity/releases/latest) to `/config/custom_components` folder.
 
-With GUI: Configuration > Integrations > Plus > Dataplicity > Follow instructions.
+## Configuration
+
+> Configuration > Integrations > Add Integration > **Dataplicity**
 
 If the integration is not in the list, you need to clear the browser cache.
