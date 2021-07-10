@@ -6,6 +6,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.requirements import async_process_requirements
 from homeassistant.util import package
 
+from . import utils
+
 DOMAIN = 'dataplicity'
 
 
@@ -47,6 +49,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         client.exit()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, hass_stop)
+
+    await utils.fix_middleware(hass)
 
     return True
 
