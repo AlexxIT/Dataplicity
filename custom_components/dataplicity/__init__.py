@@ -33,6 +33,10 @@ async def async_setup(hass: HomeAssistant, hass_config: dict):
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+    # fix: type object 'array.array' has no attribute 'tostring'
+    from dataplicity import iptool
+    iptool.get_all_interfaces = lambda: [('lo', '127.0.0.1')]
+
     # fix: module 'platform' has no attribute 'linux_distribution'
     from dataplicity import device_meta
     device_meta.get_os_version = lambda: "Linux"
