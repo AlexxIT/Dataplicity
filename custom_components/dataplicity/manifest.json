@@ -7,6 +7,6 @@
   "codeowners": ["@AlexxIT"],
   "dependencies": [],
   "requirements": [],
-  "version": "1.0.4",
+  "version": "1.0.5",
   "iot_class": "cloud_push"
 }
