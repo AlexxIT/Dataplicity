@@ -1,14 +1,14 @@
 # Dataplicity for Home Assistant
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/custom-components/hacs)
-[![Donate](https://img.shields.io/badge/donate-BuyMeCoffee-yellow.svg)](https://www.buymeacoffee.com/AlexxIT)
-[![Donate](https://img.shields.io/badge/donate-YooMoney-8C3FFD.svg)](https://yoomoney.ru/to/41001428278477)
 
 Custom component for public HTTPS access to [Home Assistant](https://www.home-assistant.io/) with [Dataplicity](https://www.dataplicity.com/) service.
 
 Should work on any Linux PC or ARM, not only Raspberry as Dataplicity service said. Don't work on Windows.
 
 With free Dataplicity subscription - limited to only one server.
+
+**ATTENTION:** I am in no way connected with the creators of this service.
 
 **ATTENTION:** Dataplicity **will be able to access all information that flows through their servers** if they want to. Use at your own risk. Read more: [github][1], [hass community][2], [raspberry forum][3]
 
