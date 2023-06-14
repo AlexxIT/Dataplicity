@@ -1,3 +1,4 @@
+import inspect
 from threading import Thread
 
 from homeassistant.config_entries import ConfigEntry
@@ -25,6 +26,15 @@ async def async_setup(hass: HomeAssistant, hass_config: dict):
         package.install_package = fake_install
         # latest dataplicity has bug with redirect_port
         await async_process_requirements(hass, DOMAIN, ['dataplicity==0.4.40'])
+        # fix Python 3.11 support
+        if not hasattr(inspect, "getargspec"):
+
+            def getargspec(*args):
+                spec = inspect.getfullargspec(*args)
+                return spec.args, spec.varargs, spec.varkw, spec.defaults
+
+            inspect.getargspec = getargspec
+
         return True
     except:
         return False
