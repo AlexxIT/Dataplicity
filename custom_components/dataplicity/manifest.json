@@ -1,12 +1,14 @@
 {
   "domain": "dataplicity",
   "name": "Dataplicity",
+  "codeowners": [
+    "@AlexxIT"
+  ],
   "config_flow": true,
-  "documentation": "https://github.com/AlexxIT/Dataplicity",
-  "issue_tracker": "https://github.com/AlexxIT/Dataplicity/issues",
-  "codeowners": ["@AlexxIT"],
   "dependencies": [],
+  "documentation": "https://github.com/AlexxIT/Dataplicity",
+  "iot_class": "cloud_push",
+  "issue_tracker": "https://github.com/AlexxIT/Dataplicity/issues",
   "requirements": [],
-  "version": "1.1.0",
-  "iot_class": "cloud_push"
+  "version": "1.2.0"
 }
