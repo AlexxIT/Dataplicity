@@ -1,5 +1,8 @@
 import logging
+import os
+import sys
 from ipaddress import IPv4Network
+from subprocess import Popen, PIPE
 
 from aiohttp import ClientSession
 from homeassistant.helpers.typing import HomeAssistantType
@@ -46,3 +49,59 @@ async def fix_middleware(hass: HomeAssistantType):
             elif var == "trusted_proxies":
                 if not cell.cell_contents:
                     cell.cell_contents = [IPv4Network("127.0.0.1/32")]
+
+
+def install_package(
+    package: str,
+    upgrade: bool = True,
+    target: str | None = None,
+    constraints: str | None = None,
+    timeout: int | None = None,
+) -> bool:
+    # important to use no-deps, because:
+    # - enum34 has problems with Hass constraints
+    # - six has problmes with Python 3.12
+    args = [
+        sys.executable,
+        "-m",
+        "pip",
+        "install",
+        "--quiet",
+        package,
+        "--no-deps",
+        # "enum34==1.1.6",
+        # "six==1.10.0",
+        "lomond==0.3.3",
+    ]
+    env = os.environ.copy()
+
+    if timeout:
+        args += ["--timeout", str(timeout)]
+    if upgrade:
+        args.append("--upgrade")
+    if constraints is not None:
+        args += ["--constraint", constraints]
+    if target:
+        args += ["--user"]
+        env["PYTHONUSERBASE"] = os.path.abspath(target)
+
+    _LOGGER.debug("Running pip command: args=%s", args)
+
+    with Popen(
+        args,
+        stdin=PIPE,
+        stdout=PIPE,
+        stderr=PIPE,
+        env=env,
+        close_fds=False,  # required for posix_spawn
+    ) as process:
+        _, stderr = process.communicate()
+        if process.returncode != 0:
+            _LOGGER.error(
+                "Unable to install package %s: %s",
+                package,
+                stderr.decode("utf-8").lstrip().strip(),
+            )
+            return False
+
+    return True

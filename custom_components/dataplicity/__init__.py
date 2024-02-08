@@ -13,17 +13,16 @@ DOMAIN = "dataplicity"
 
 
 async def async_setup(hass: HomeAssistant, hass_config: dict):
-    # fix problems with `enum34==1000000000.0.0` constraint in Hass
-    # https://github.com/home-assistant/core/commit/45f6f4443aa897a9c9c89cedbf3be6c7748cca94
-    # but it's not a problem in latest python versions
     real_install = package.install_package
 
-    def fake_install(*args, **kwargs):
-        kwargs.pop("constraints")
-        return real_install(*args, **kwargs)
+    def fake_install(pkg: str, *args, **kwargs):
+        if pkg == "dataplicity==0.4.40":
+            return utils.install_package(pkg, *args, **kwargs)
+        return real_install(pkg, *args, **kwargs)
 
     try:
         package.install_package = fake_install
+
         # latest dataplicity has bug with redirect_port
         await async_process_requirements(hass, DOMAIN, ["dataplicity==0.4.40"])
 
