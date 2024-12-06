@@ -43,17 +43,8 @@ async def async_setup(hass: HomeAssistant, hass_config: dict):
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
-    # fix: type object 'array.array' has no attribute 'tostring'
-    from dataplicity import iptool
-
-    iptool.get_all_interfaces = lambda: [("lo", "127.0.0.1")]
-
-    # fix: module 'platform' has no attribute 'linux_distribution'
-    from dataplicity import device_meta
-
-    device_meta.get_os_version = lambda: "Linux"
-
-    from dataplicity.client import Client
+    # fix https://github.com/AlexxIT/Dataplicity/issues/29
+    Client = await hass.async_add_executor_job(utils.import_client)
 
     hass.data[DOMAIN] = client = Client(
         serial=entry.data["serial"], auth_token=entry.data["auth"]
@@ -73,9 +64,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
-    from dataplicity.client import Client
-
-    client: Client = hass.data[DOMAIN]
+    client = hass.data[DOMAIN]
     client.exit()
-
     return True
