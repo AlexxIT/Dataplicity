@@ -5,7 +5,7 @@ from ipaddress import IPv4Network
 from subprocess import Popen, PIPE
 
 from aiohttp import ClientSession
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,7 +25,7 @@ async def register_device(session: ClientSession, token: str):
         return None
 
 
-async def fix_middleware(hass: HomeAssistantType):
+async def fix_middleware(hass: HomeAssistant):
     """Dirty hack for HTTP integration. Plug and play for usual users...
 
     [v2021.7] Home Assistant will now block HTTP requests when a misconfigured
