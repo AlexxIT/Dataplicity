@@ -10,7 +10,7 @@ from . import DOMAIN, utils
 
 _LOGGER = logging.getLogger(__name__)
 
-RE_TOKEN = re.compile(r"https://www\.dataplicity\.com/([a-z0-9]+)\.py")
+RE_TOKEN = re.compile(r"https://www\.dataplicity\.com/([a-z0-9-]+)\.py")
 
 
 class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -34,6 +34,8 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
         m = RE_TOKEN.search(data["token"])
         token = m[1] if m else data["token"]
+        # fix new format `https://www.dataplicity.com/3-********.py`
+        token = re.sub(r"^\d-", "", token)
 
         if not token.isalnum():
             return await self.async_step_user(error="token")
