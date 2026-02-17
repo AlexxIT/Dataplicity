@@ -22,9 +22,9 @@ If you have an extra $5 per month - it's better to use [Nabu Casa](https://www.n
 
 ## Installation
 
-**Method 1.** [HACS](https://hacs.xyz/) custom repo:
+[![](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=AlexxIT&repository=Dataplicity&category=Integration)
 
-> HACS > Integrations > 3 dots (upper top corner) > Custom repositories > URL: `AlexxIT/Dataplicity`, Category: Integration > Add > wait > Dataplicity > Install
+**Method 1.** [HACS](https://hacs.xyz/) > 3 dots (upper top corner) > Custom repositories > URL: `AlexxIT/Dataplicity`, Category: Integration > Add > wait > Dataplicity > Install
 
 **Method 2.** Manually copy `dataplicity` folder from [latest release](https://github.com/AlexxIT/Dataplicity/releases/latest) to `/config/custom_components` folder.
 
