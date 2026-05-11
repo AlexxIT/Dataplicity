@@ -1,5 +1,6 @@
 import logging
 import os
+import re
 import sys
 from ipaddress import IPv4Network
 from subprocess import Popen, PIPE
@@ -9,18 +10,50 @@ from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
 
+PROVISION_URL = "https://app-api.dataplicity.com/device-gateway/provision/"
+SH_URL_TEMPLATE = "https://dataplicity.com/{token}.sh"
+RE_DEVICE_CLASS_HASH = re.compile(r"device_class_hash=([a-f0-9]{64})")
 
-async def register_device(session: ClientSession, token: str):
+
+async def fetch_device_class_hash(session: ClientSession, token: str):
+    try:
+        r = await session.get(SH_URL_TEMPLATE.format(token=token))
+        if r.status != 200:
+            _LOGGER.error(f"Can't fetch install wrapper for token: {r.status}")
+            return None
+        text = await r.text()
+        m = RE_DEVICE_CLASS_HASH.search(text)
+        if not m:
+            _LOGGER.error("device_class_hash not found in install wrapper")
+            return None
+        return m.group(1)
+    except Exception:
+        _LOGGER.exception("Can't fetch device_class_hash")
+        return None
+
+
+async def register_device(session: ClientSession, token: str, device_class_hash: str):
     try:
         r = await session.post(
-            "https://www.dataplicity.com/install/",
-            data={"name": "Home Assistant", "serial": "None", "token": token},
+            PROVISION_URL,
+            data={
+                "provisioning_key": token,
+                "name": "Home Assistant",
+                "device_class_hash": device_class_hash,
+            },
+            headers={"User-Agent": "Python-urllib/3.11"},
         )
         if r.status != 200:
             _LOGGER.error(f"Can't register dataplicity device: {r.status}")
             return None
-        return await r.json()
-    except:
+        body = await r.json()
+        serial = body.get("hash_id") or body.get("serial")
+        auth = body.get("device_secret") or body.get("auth")
+        if not serial or not auth:
+            _LOGGER.error(f"Provisioning response missing creds: keys={list(body)}")
+            return None
+        return {"serial": serial, "auth": auth, "device_url": body.get("device_url", "")}
+    except Exception:
         _LOGGER.exception("Can't register dataplicity device")
         return None
 
