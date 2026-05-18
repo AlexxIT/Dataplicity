@@ -24,8 +24,10 @@ async def async_setup(hass: HomeAssistant, hass_config: dict):
     try:
         package.install_package = fake_install
 
+        # 0.5.13 verified working; older versions had a redirect_port bug
         await async_process_requirements(hass, DOMAIN, ["dataplicity==0.5.13"])
 
+        # fix Python 3.11+ support (getargspec removed in 3.11)
         if not hasattr(inspect, "getargspec"):
             def getargspec(*args):
                 spec = inspect.getfullargspec(*args)
@@ -41,11 +43,13 @@ async def async_setup(hass: HomeAssistant, hass_config: dict):
         package.install_package = real_install
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+    # fix https://github.com/AlexxIT/Dataplicity/issues/29
     try:
         Client = await hass.async_add_executor_job(utils.import_client)
         hass.data[DOMAIN] = client = Client(
             serial=entry.data["serial"], auth_token=entry.data["auth"]
         )
+        # replace default 80 port to Hass port (usual 8123)
         client.port_forward.add_service("web", hass.config.api.port)
         Thread(name=DOMAIN, target=client.run_forever).start()
         async def hass_stop(event):

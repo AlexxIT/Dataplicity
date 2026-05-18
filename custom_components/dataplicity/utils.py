@@ -19,6 +19,8 @@ def install_package(
     timeout: int | None = None,
 ) -> bool:
     """Install dataplicity package via pip subprocess (avoids recursion with fake_install)."""
+    # important to use --no-deps, because some transitive packages
+    # (e.g. lomond) have versions that conflict with Home Assistant constraints
     args = [
         sys.executable,
         "-m",
@@ -48,7 +50,7 @@ def install_package(
         stdout=PIPE,
         stderr=PIPE,
         env=env,
-        close_fds=False,
+        close_fds=False,  # required for posix_spawn
     ) as process:
         _, stderr = process.communicate()
         if process.returncode != 0:
@@ -109,10 +111,21 @@ async def register_device(session: ClientSession, token: str, device_class_hash:
 
 
 async def fix_middleware(hass: HomeAssistant):
-    """Silent hack to allow Dataplicity wormhole (reverse proxy from 127.0.0.1)."""
+    """Dirty hack for HTTP integration. Plug and play for usual users...
+
+    [v2021.7] Home Assistant will now block HTTP requests when a misconfigured
+    reverse proxy, or misconfigured Home Assistant instance when using a
+    reverse proxy, has been detected.
+
+    http:
+      use_x_forwarded_for: true
+      trusted_proxies:
+      - 127.0.0.1
+    """
     for f in hass.http.app.middlewares:
         if getattr(f, "__name__", None) != "forwarded_middleware":
             continue
+        #  https://til.hashrocket.com/posts/ykhyhplxjh-examining-the-closure
         for i, var in enumerate(f.__code__.co_freevars):
             cell = f.__closure__[i]
             if var == "use_x_forwarded_for":
@@ -125,6 +138,7 @@ async def fix_middleware(hass: HomeAssistant):
 
 
 def import_client():
+    # fix: type object 'array.array' has no attribute 'tostring'
     try:
         from dataplicity import iptool
     except ImportError:
@@ -132,6 +146,7 @@ def import_client():
     else:
         iptool.get_all_interfaces = lambda: [("lo", "127.0.0.1")]
 
+    # fix: module 'platform' has no attribute 'linux_distribution'
     try:
         from dataplicity import device_meta
     except ImportError:
