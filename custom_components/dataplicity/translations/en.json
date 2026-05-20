@@ -14,9 +14,9 @@
     "step": {
       "user": {
         "title": "Register Dataplicity Device",
-        "description": "Sign up to [Dataplicity](https://www.dataplicity.com/) and paste full install line or URL or Token:\n`https://www.dataplicity.com/XXXXXXXX.py`",
+        "description": "Sign up to [Dataplicity](https://www.dataplicity.com/) and paste the install URL from Add device:\n`dataplicity.com/XXXXXXXX...`\n\nOr, to reuse already-provisioned credentials, paste them as `serial:auth`.",
         "data": {
-          "token": "URL or Token"
+          "token": "Install URL or serial:auth"
         }
       }
     }
