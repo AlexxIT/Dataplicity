@@ -10,9 +10,7 @@ from . import DOMAIN, utils
 
 _LOGGER = logging.getLogger(__name__)
 
-RE_INSTALL_URL = re.compile(
-    r"https?://(?:www\.)?dataplicity\.com/([A-Za-z0-9_-]+)\.(?:py|sh)"
-)
+RE_INSTALL_URL = re.compile(r"dataplicity\.com/([A-Za-z0-9_-]+)")
 RE_TOKEN_CHARS = re.compile(r"^[A-Za-z0-9_-]+$")
 RE_RECOVERY = re.compile(r"^([A-Za-z0-9_-]{8,}):(.+)$")
 
@@ -36,20 +34,20 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors={"base": error} if error else None,
             )
 
-        input_str = data["token"].strip()
+        token = data["token"].strip()
 
-        if not input_str.lower().startswith("http"):
-            m_rec = RE_RECOVERY.match(input_str)
-            if m_rec:
-                serial, auth = m_rec.group(1), m_rec.group(2).strip()
-                return self.async_create_entry(
-                    title="Dataplicity",
-                    data={"auth": auth, "serial": serial},
-                    description_placeholders={"device_url": ""},
-                )
+        if m := RE_RECOVERY.match(token):
+            serial, auth = m.group(1), m.group(2).strip()
+            return self.async_create_entry(
+                title="Dataplicity",
+                data={"auth": auth, "serial": serial},
+                description_placeholders={"device_url": ""},
+            )
 
-        m = RE_INSTALL_URL.search(input_str)
-        token = m.group(1) if m else input_str
+        # 2026.05 link format https://app-api.dataplicity.com/3-XXXXXXXX.py
+        if m := RE_INSTALL_URL.search(token):
+            token = m.group(1)
+
         token = re.sub(r"^\d-", "", token)
 
         if not RE_TOKEN_CHARS.match(token):
@@ -61,12 +59,11 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         if device_class_hash is None:
             return await self.async_step_user(error="token")
 
-        resp = await utils.register_device(session, token, device_class_hash)
-        if resp:
+        if resp := await utils.register_device(session, token, device_class_hash):
             return self.async_create_entry(
                 title="Dataplicity",
                 data={"auth": resp["auth"], "serial": resp["serial"]},
-                description_placeholders={"device_url": resp.get("device_url", "")},
+                description_placeholders={"device_url": resp["device_url"]},
             )
 
         return await self.async_step_user(error="auth")

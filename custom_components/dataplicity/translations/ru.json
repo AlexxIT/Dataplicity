@@ -14,7 +14,7 @@
     "step": {
       "user": {
         "title": "Регистрация устройства Dataplicity",
-        "description": "Зарегистрируйтесь в сервисе [Dataplicity](https://www.dataplicity.com/) и вставьте ссылку установки из кнопки Add device:\n`https://dataplicity.com/XXXXXXXX.sh`\n\nИли, чтобы использовать уже полученные учётные данные, вставьте их в формате `serial:auth`.",
+        "description": "Зарегистрируйтесь в сервисе [Dataplicity](https://www.dataplicity.com/) и вставьте ссылку установки из кнопки Add device:\n`dataplicity.com/XXXXXXXX...`\n\nИли используйте ранее полученные учётные данные, в формате `serial:auth`.",
         "data": {
           "token": "Ссылка установки или serial:auth"
         }
