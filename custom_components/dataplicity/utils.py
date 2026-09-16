@@ -142,6 +142,76 @@ def install_package(
     return True
 
 
+class _ConnectionEOF(BaseException):
+    """Signals that a forwarded socket has reached EOF.
+
+    Deliberately not an Exception: `portforward.Connection.run` wraps recv()
+    in `except Exception`, which would swallow the signal.
+    """
+
+
+class _EOFAwareSocket:
+    """Socket proxy that raises _ConnectionEOF on a zero byte recv()."""
+
+    def __init__(self, sock):
+        self._sock = sock
+
+    def recv(self, *args, **kwargs):
+        data = self._sock.recv(*args, **kwargs)
+        if not data:
+            raise _ConnectionEOF
+        return data
+
+    def __getattr__(self, name):
+        return getattr(self._sock, name)
+
+
+def fix_portforward_eof():
+    """Stop a peer closed socket from spinning a CPU core at 100%.
+
+    In dataplicity 0.4.40 `portforward.Connection.run` reacts to a zero byte
+    recv() with a `break` that leaves only the inner `for` loop over the poll
+    results, not the outer `while`. EOF keeps the socket permanently readable,
+    so poll() returns immediately and the thread calls recv() forever.
+
+    The loop's only per connection exit is `self.channel.is_closed`, but
+    `Channel.close()` merely *requests* a close - `is_closed` flips when the
+    m2m server answers with notify_close. While the tunnel is unhealthy, which
+    is exactly when sockets get aborted, that answer never arrives and the
+    thread keeps burning a core. `close_event` is no alternative: it is shared
+    by the whole port forwarding service, so a single connection must not set
+    it. Reloading the config entry does not help either, the orphaned thread
+    just keeps running.
+
+    The connection therefore leaves the loop on its own: recv() raises a
+    BaseException that escapes the `except Exception` around it, still runs the
+    `finally` cleanup of run(), and is swallowed by a wrapper.
+    """
+    from dataplicity import portforward
+
+    if getattr(portforward, "_eof_fix_applied", False):
+        return
+
+    connect = portforward.Connection._connect
+    run = portforward.Connection.run
+
+    def _connect(self) -> bool:
+        connected = connect(self)
+        if connected and self.socket is not None:
+            self.socket = _EOFAwareSocket(self.socket)
+        return connected
+
+    def _run(self):
+        try:
+            run(self)
+        except _ConnectionEOF:
+            _LOGGER.debug("Port forward connection closed by peer")
+
+    portforward.Connection._connect = _connect
+    portforward.Connection.run = _run
+    portforward._eof_fix_applied = True
+
+
 def import_client():
     # fix: type object 'array.array' has no attribute 'tostring'
     from dataplicity import iptool
@@ -152,6 +222,9 @@ def import_client():
     from dataplicity import device_meta
 
     device_meta.get_os_version = lambda: "Linux"
+
+    # fix: 100% CPU spin when a forwarded socket is closed by the peer
+    fix_portforward_eof()
 
     from dataplicity.client import Client
 
