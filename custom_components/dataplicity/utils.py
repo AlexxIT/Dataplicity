@@ -107,6 +107,8 @@ def install_package(
         # "enum34==1.1.6",
         # "six==1.10.0",
         "lomond==0.3.3",
+        # imported at module level by dataplicity.device_meta since 0.5.x
+        "distro",
     ]
     env = os.environ.copy()
 
@@ -169,7 +171,7 @@ class _EOFAwareSocket:
 def fix_portforward_eof():
     """Stop a peer closed socket from spinning a CPU core at 100%.
 
-    In dataplicity 0.4.40 `portforward.Connection.run` reacts to a zero byte
+    In dataplicity 0.4.40 and 0.5.13 `portforward.Connection.run` reacts to a zero byte
     recv() with a `break` that leaves only the inner `for` loop over the poll
     results, not the outer `while`. EOF keeps the socket permanently readable,
     so poll() returns immediately and the thread calls recv() forever.
