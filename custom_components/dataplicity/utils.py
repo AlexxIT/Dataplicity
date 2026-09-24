@@ -267,7 +267,11 @@ def fix_m2m_lifecycle():
                         _LOGGER.exception("Error handling m2m websocket event")
         except Exception:
             _LOGGER.exception("Unhandled error from m2m websocket")
-        self.on_close()
+        # The agent's run() ends with self.on_close(), which WSClient doesn't
+        # have - it was never reached before. persist() already emitted
+        # "disconnected" (-> on_disconnected), so just let the manager close
+        # its terminals.
+        self.manager.on_client_close()
 
     def _close(self, *args, **kwargs):
         # set first: persist() checks the event once the socket is closed
