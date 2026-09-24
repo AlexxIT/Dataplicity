@@ -2,6 +2,7 @@ import logging
 import os
 import re
 import sys
+import threading
 from ipaddress import IPv4Network
 from subprocess import Popen, PIPE
 
@@ -73,7 +74,7 @@ async def fix_middleware(hass: HomeAssistant):
       - 127.0.0.1
     """
     for f in hass.http.app.middlewares:
-        if f.__name__ != "forwarded_middleware":
+        if getattr(f, "__name__", None) != "forwarded_middleware":
             continue
         #  https://til.hashrocket.com/posts/ykhyhplxjh-examining-the-closure
         for i, var in enumerate(f.__code__.co_freevars):
@@ -212,6 +213,81 @@ def fix_portforward_eof():
     portforward._eof_fix_applied = True
 
 
+# lomond sends a ping every 30 s by default; drop the connection when no pong
+# came back for three ping periods (lomond suggests "double ping_rate").
+M2M_PING_TIMEOUT = 90
+
+
+def fix_m2m_lifecycle():
+    """Make the m2m websocket stoppable and detect dead connections.
+
+    `Client.exit()` only stops the agent's poll loop. `Client.close()`, which the
+    loop calls on the way out, is a no-op in the agent, so the m2m websocket
+    thread keeps running. It could not be stopped anyway: `WSClient.run` calls
+    lomond's `persist()` without an `exit_event`, and `WSClient.close()` only
+    closes the current socket, after which `persist()` reconnects. Every config
+    entry reload therefore leaks one more m2m connection that keeps
+    re-associating the device with the Dataplicity server.
+
+    `persist()` is also called with `ping_timeout=None`, so a half-open
+    connection (e.g. after the router drops the NAT mapping) is never noticed:
+    the thread waits forever on a dead socket and the tunnel shows "Device not
+    connected" until Home Assistant restarts.
+
+    Fix both by giving every `WSClient` an exit event, passing it and a ping
+    timeout to `persist()`, and making `Client.close()` shut down the m2m and
+    port forwarding parts.
+    """
+    from dataplicity import client as dp_client
+    from dataplicity.m2m import wsclient
+    from lomond.persist import persist
+
+    if getattr(wsclient, "_lifecycle_fix_applied", False):
+        return
+
+    WSClient = wsclient.WSClient
+    init = WSClient.__init__
+    close = WSClient.close
+
+    def _init(self, *args, **kwargs):
+        init(self, *args, **kwargs)
+        self.exit_event = threading.Event()
+
+    def _run(self):
+        try:
+            with self.websocket:
+                for event in persist(
+                    self.websocket,
+                    ping_timeout=M2M_PING_TIMEOUT,
+                    exit_event=self.exit_event,
+                ):
+                    try:
+                        self.on_event(event)
+                    except Exception:
+                        _LOGGER.exception("Error handling m2m websocket event")
+        except Exception:
+            _LOGGER.exception("Unhandled error from m2m websocket")
+        self.on_close()
+
+    def _close(self, *args, **kwargs):
+        # set first: persist() checks the event once the socket is closed
+        self.exit_event.set()
+        close(self, *args, **kwargs)
+
+    def _client_close(self):
+        # called from Client.run_forever() after exit(), in the agent thread
+        if port_forward := getattr(self, "port_forward", None):
+            port_forward.close_event.set()
+        if m2m := getattr(self, "m2m", None):
+            m2m.close()
+
+    WSClient.__init__ = _init
+    WSClient.run = _run
+    WSClient.close = _close
+    dp_client.Client.close = _client_close
+    wsclient._lifecycle_fix_applied = True
+
+
 def import_client():
     # fix: type object 'array.array' has no attribute 'tostring'
     from dataplicity import iptool
@@ -225,6 +301,9 @@ def import_client():
 
     # fix: 100% CPU spin when a forwarded socket is closed by the peer
     fix_portforward_eof()
+
+    # fix: leaked m2m connections on reload, dead tunnel after network blips
+    fix_m2m_lifecycle()
 
     from dataplicity.client import Client
 

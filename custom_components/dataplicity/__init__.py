@@ -1,4 +1,5 @@
 import inspect
+import logging
 from threading import Thread
 
 from homeassistant.config_entries import ConfigEntry
@@ -10,6 +11,8 @@ from homeassistant.util import package
 from . import utils
 
 DOMAIN = "dataplicity"
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass: HomeAssistant, hass_config: dict):
@@ -36,7 +39,8 @@ async def async_setup(hass: HomeAssistant, hass_config: dict):
             inspect.getargspec = getargspec
 
         return True
-    except:
+    except Exception:
+        _LOGGER.exception("Can't install dataplicity agent")
         return False
     finally:
         package.install_package = real_install
@@ -64,6 +68,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
-    client = hass.data[DOMAIN]
-    client.exit()
+    # the agent thread closes m2m and port forwarding on exit (fix_m2m_lifecycle)
+    if client := hass.data.pop(DOMAIN, None):
+        client.exit()
     return True
